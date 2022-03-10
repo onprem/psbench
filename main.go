@@ -8,6 +8,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 
+	"github.com/onprem/psbench/pkg/bench"
 	"github.com/onprem/psbench/pkg/config"
 )
 
@@ -26,6 +27,11 @@ func run() error {
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 
 	defer level.Info(logger).Log("msg", "exiting")
+
+	_, err = bench.BenchPromscale(logger, cfg.Queries, cfg.Workers)
+	if err != nil {
+		return fmt.Errorf("benchmarking promscale: %w", err)
+	}
 
 	return nil
 }
