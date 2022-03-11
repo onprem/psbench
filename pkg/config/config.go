@@ -92,6 +92,8 @@ func parseLogLevel(logLevelRaw *string) (level.Option, error) {
 	}
 }
 
+var errInvalidRow error = fmt.Errorf("invalid number of fields in row")
+
 func parseQueriesFile(file io.Reader) ([]Query, error) {
 	qr := csv.NewReader(file)
 	// This is requiured are labels in PromQL expressions are quoted with `"`.
@@ -111,7 +113,7 @@ func parseQueriesFile(file io.Reader) ([]Query, error) {
 		}
 
 		if len(r) < 4 {
-			return queries, fmt.Errorf("invalid number of fields in row")
+			return []Query{}, errInvalidRow
 		}
 
 		q := Query{Expression: r[0]}
