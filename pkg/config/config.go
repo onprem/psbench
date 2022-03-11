@@ -44,7 +44,7 @@ func ParseFlags() (*Config, error) {
 	queriesFilePath := flag.String(
 		"queries.file",
 		"",
-		"Path to CSV file that contains rows with queries to execute. Format: PromQL query,start_time,end_time,step size.",
+		"Path to CSV file that contains rows with queries to execute. Format: PromQL query|start_time|end_time|step size.",
 	)
 
 	flag.Parse()

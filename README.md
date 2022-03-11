@@ -11,7 +11,7 @@ Usage of ./psbench:
   -promscale.url string
     	The URL of the Promscale instance to run the benchmark against.
   -queries.file string
-    	Path to CSV file that contains rows with queries to execute. Format: PromQL query,start_time,end_time,step size.
+    	Path to CSV file that contains rows with queries to execute. Format: PromQL query|start_time|end_time|step size.
   -workers int
     	The number of workers/clients to run parallelly to query the Promscale instance. (default 1)
 ```
