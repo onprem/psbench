@@ -26,12 +26,12 @@ func run() error {
 	logger = level.NewFilter(logger, cfg.LogLevel)
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 
-	defer level.Info(logger).Log("msg", "exiting")
-
-	_, err = bench.BenchPromscale(logger, cfg.Queries, cfg.Workers)
+	result, err := bench.BenchPromscale(logger, cfg.PromscaleURL, cfg.Queries, cfg.Workers)
 	if err != nil {
 		return fmt.Errorf("benchmarking promscale: %w", err)
 	}
+
+	fmt.Println(result)
 
 	return nil
 }

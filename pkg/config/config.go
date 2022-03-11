@@ -16,8 +16,9 @@ type Config struct {
 	LogFormat string
 	LogLevel  level.Option
 
-	Workers int
-	Queries []Query
+	PromscaleURL string
+	Workers      int
+	Queries      []Query
 }
 
 type Query struct {
@@ -34,6 +35,8 @@ func ParseFlags() (*Config, error) {
 	logLevelRaw := flag.String("log.level", "info", "The log filtering level. Options: 'error', 'warn', 'info', 'debug'.")
 	flag.StringVar(&cfg.LogFormat, "log.format", "logfmt", "The log format to use. Options: 'logfmt', 'json'.")
 
+	flag.StringVar(&cfg.PromscaleURL, "promscale.url", "",
+		"The URL of the Promscale instance to run the benchmark against.")
 	flag.IntVar(&cfg.Workers, "workers", 1,
 		"The number of workers/clients to run parallelly to query the Promscale instance.")
 
@@ -52,6 +55,10 @@ func ParseFlags() (*Config, error) {
 	}
 
 	cfg.LogLevel = ll
+
+	if cfg.PromscaleURL == "" {
+		return nil, fmt.Errorf("promscale url is required")
+	}
 
 	if cfg.Workers < 1 {
 		return nil, fmt.Errorf("number of workers needs to be greater than 0")
