@@ -21,6 +21,7 @@ type Result struct {
 func BenchPromscale(logger log.Logger, queries []config.Query, workers int) (Result, error) {
 	queue := make(chan config.Query)
 
+	// Send all queries to the task queue.
 	go func() {
 		for _, v := range queries {
 			queue <- v
@@ -31,6 +32,7 @@ func BenchPromscale(logger log.Logger, queries []config.Query, workers int) (Res
 
 	var wg sync.WaitGroup
 
+	// Run the specified number of workers to process queries for the queue.
 	for i := 0; i < workers; i++ {
 		wg.Add(1)
 

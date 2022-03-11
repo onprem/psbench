@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/go-kit/kit/log/level"
 )
@@ -21,9 +22,9 @@ type Config struct {
 
 type Query struct {
 	Expression string
-	StartTime  uint64
-	EndTime    uint64
-	Step       uint64
+	StartTime  time.Time
+	EndTime    time.Time
+	Step       time.Duration
 }
 
 func ParseFlags() (*Config, error) {
@@ -86,6 +87,7 @@ func parseLogLevel(logLevelRaw *string) (level.Option, error) {
 
 func parseQueriesFile(file io.Reader) ([]Query, error) {
 	qr := csv.NewReader(file)
+	// This is requiured are labels in PromQL expressions are quoted with `"`.
 	qr.LazyQuotes = true
 	qr.Comma = '|'
 
@@ -102,22 +104,31 @@ func parseQueriesFile(file io.Reader) ([]Query, error) {
 		}
 
 		if len(r) < 4 {
-			return queries, fmt.Errorf("invalid number of rows in CSV")
+			return queries, fmt.Errorf("invalid number of fields in row")
 		}
 
 		q := Query{Expression: r[0]}
 
-		if q.StartTime, err = strconv.ParseUint(r[1], 10, 64); err != nil {
+		startTime, err := strconv.ParseInt(r[1], 10, 64)
+		if err != nil {
 			return queries, err
 		}
 
-		if q.EndTime, err = strconv.ParseUint(r[2], 10, 64); err != nil {
+		q.StartTime = time.Unix(startTime, 0)
+
+		endTime, err := strconv.ParseInt(r[2], 10, 64)
+		if err != nil {
 			return queries, err
 		}
 
-		if q.Step, err = strconv.ParseUint(r[3], 10, 64); err != nil {
+		q.EndTime = time.Unix(endTime, 0)
+
+		step, err := strconv.ParseUint(r[3], 10, 64)
+		if err != nil {
 			return queries, err
 		}
+
+		q.Step = time.Second * time.Duration(step)
 
 		queries = append(queries, q)
 	}
