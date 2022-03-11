@@ -1,0 +1,10 @@
+apiVersion: 1
+datasources:
+- name: Promscale
+  type: prometheus
+  access: proxy
+  orgId: 1
+  url: http://promscale:9201
+  version: 1
+  editable: true
+  isDefault: true
