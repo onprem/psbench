@@ -1,0 +1,37 @@
+version: '3.0'
+
+services:
+  db:
+    image: timescale/timescaledb-ha:pg14-latest
+    ports:
+      - 5432:5432/tcp
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+
+  promscale:
+    image: timescale/promscale:0.10
+    ports:
+      - 9201:9201/tcp
+      - 9202:9202/tcp
+    restart: on-failure
+    depends_on:
+      - db
+    environment:
+      PROMSCALE_DB_CONNECT_RETRIES: 10
+      PROMSCALE_WEB_TELEMETRY_PATH: /metrics-text
+      PROMSCALE_DB_URI: postgres://postgres:password@db:5432/postgres?sslmode=allow
+
+  grafana:
+    image: grafana/grafana-oss:8.4.3
+    container_name: grafana
+    volumes:
+      - ./docker/grafana/provisioning:/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_PATHS_PROVISIONING=/provisioning
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
