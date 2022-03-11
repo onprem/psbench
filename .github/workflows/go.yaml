@@ -1,0 +1,35 @@
+name: go
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+  tests:
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        go: [ '1.17.x']
+        platform: [ubuntu-latest]
+
+    name: Unit tests on Go ${{ matrix.go }} ${{ matrix.platform }}
+    steps:
+      - name: Checkout code into the Go module directory.
+        uses: actions/checkout@v2
+
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+
+      - uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+
+      - name: Run unit tests.
+        env:
+          GOBIN: /tmp/.bin
+        run: make test
