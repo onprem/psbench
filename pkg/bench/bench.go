@@ -33,25 +33,29 @@ func BenchPromscale(logger log.Logger, address string, queries []config.Query, w
 
 	promapi := v1.NewAPI(c)
 
+	var wg, wgTime sync.WaitGroup
+
 	queryTimes := make([]time.Duration, 0, len(queries))
 	timeQ := make(chan time.Duration)
 
 	go func() {
+		wgTime.Add(1)
 		for d := range timeQ {
 			queryTimes = sortedAppend(queryTimes, d)
 		}
+		wgTime.Done()
 	}()
 
 	failed := 0
 	failedQ := make(chan struct{})
 
 	go func() {
+		wgTime.Add(1)
 		for _ = range failedQ {
 			failed += 1
 		}
+		wgTime.Done()
 	}()
-
-	var wg sync.WaitGroup
 
 	// Run the specified number of workers to process queries for the queue.
 	for i := 0; i < workers; i++ {
@@ -82,6 +86,11 @@ func BenchPromscale(logger log.Logger, address string, queries []config.Query, w
 	}
 
 	wg.Wait()
+
+	close(timeQ)
+	close(failedQ)
+
+	wgTime.Wait()
 
 	return generateResult(queryTimes, len(queries), failed), nil
 }

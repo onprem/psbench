@@ -44,10 +44,12 @@ Usage of ./psbench:
 ```
 $ ./psbench -workers 3 -queries.file ./docker/obs-queries.csv -promscale.url http://localhost:9201
 
-Total Number of Queries: 	10
-Total Processing Time: 		24.681721ms
-Minimum Query Time: 		1.131087ms
-Maximum Query Time: 		3.814267ms
-Median Query Time: 			2.277084ms
-Avergae Query Time: 		2.468172ms
+Total Number of Queries: 	11
+Successful Queries: 		11
+Failed Queries: 		0
+Total Processing Time: 		17.395001ms
+Minimum Query Time: 		698.382µs
+Maximum Query Time: 		2.41259ms
+Median Query Time: 		1.354087ms
+Avergae Query Time: 		1.581363ms
 ```
