@@ -3,7 +3,6 @@ package bench
 import (
 	"context"
 	"fmt"
-	"sort"
 	"sync"
 	"time"
 
@@ -39,7 +38,7 @@ func BenchPromscale(logger log.Logger, address string, queries []config.Query, w
 
 	go func() {
 		for d := range timeQ {
-			queryTimes = append(queryTimes, d)
+			queryTimes = sortedAppend(queryTimes, d)
 		}
 	}()
 
@@ -77,6 +76,8 @@ func BenchPromscale(logger log.Logger, address string, queries []config.Query, w
 	return generateResult(queryTimes), nil
 }
 
+// generateResult evaluates the given set of query times and generates the Result struct from it.
+// It expects the queryTimes array to be already sorted.
 func generateResult(queryTimes []time.Duration) Result {
 	if len(queryTimes) == 0 {
 		return Result{}
@@ -92,8 +93,6 @@ func generateResult(queryTimes []time.Duration) Result {
 
 	res.AverageQueryTime = res.TotalProcessingTime / time.Duration(res.NumQueries)
 
-	sort.Slice(queryTimes, func(i, j int) bool { return queryTimes[i] < queryTimes[j] })
-
 	res.MinQueryTime = queryTimes[0]
 	res.MaxQueryTime = queryTimes[len(queryTimes)-1]
 
@@ -105,6 +104,19 @@ func generateResult(queryTimes []time.Duration) Result {
 	}
 
 	return res
+}
+
+func sortedAppend(arr []time.Duration, d time.Duration) []time.Duration {
+	arr = append(arr, d)
+	for i := len(arr) - 1; i > 0; i-- {
+		if arr[i] < arr[i-1] {
+			arr[i], arr[i-1] = arr[i-1], arr[i]
+		} else {
+			// Break the circuit once we reach the already sorted part of array.
+			break
+		}
+	}
+	return arr
 }
 
 type Result struct {
