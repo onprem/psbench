@@ -42,6 +42,15 @@ func BenchPromscale(logger log.Logger, address string, queries []config.Query, w
 		}
 	}()
 
+	failed := 0
+	failedQ := make(chan struct{})
+
+	go func() {
+		for _ = range failedQ {
+			failed += 1
+		}
+	}()
+
 	var wg sync.WaitGroup
 
 	// Run the specified number of workers to process queries for the queue.
@@ -59,6 +68,7 @@ func BenchPromscale(logger log.Logger, address string, queries []config.Query, w
 				)
 				if err != nil {
 					level.Error(logger).Log("msg", "executing query", "expression", q.Expression, "err", err)
+					failedQ <- struct{}{}
 					continue
 				}
 
@@ -73,25 +83,27 @@ func BenchPromscale(logger log.Logger, address string, queries []config.Query, w
 
 	wg.Wait()
 
-	return generateResult(queryTimes), nil
+	return generateResult(queryTimes, len(queries), failed), nil
 }
 
 // generateResult evaluates the given set of query times and generates the Result struct from it.
 // It expects the queryTimes array to be already sorted.
-func generateResult(queryTimes []time.Duration) Result {
+func generateResult(queryTimes []time.Duration, total, failed int) Result {
 	if len(queryTimes) == 0 {
 		return Result{}
 	}
 
 	res := Result{
-		NumQueries: len(queryTimes),
+		NumQueries:        total,
+		SuccessfulQueries: len(queryTimes),
+		FailedQueries:     failed,
 	}
 
 	for _, v := range queryTimes {
 		res.TotalProcessingTime += v
 	}
 
-	res.AverageQueryTime = res.TotalProcessingTime / time.Duration(res.NumQueries)
+	res.AverageQueryTime = res.TotalProcessingTime / time.Duration(res.SuccessfulQueries)
 
 	res.MinQueryTime = queryTimes[0]
 	res.MaxQueryTime = queryTimes[len(queryTimes)-1]
@@ -121,6 +133,8 @@ func sortedAppend(arr []time.Duration, d time.Duration) []time.Duration {
 
 type Result struct {
 	NumQueries          int
+	SuccessfulQueries   int
+	FailedQueries       int
 	TotalProcessingTime time.Duration
 	MinQueryTime        time.Duration
 	MaxQueryTime        time.Duration
@@ -131,11 +145,14 @@ type Result struct {
 func (r Result) String() string {
 	return fmt.Sprintf(
 		"Total Number of Queries: \t%d\n"+
+			"Successful Queries: \t\t%d\n"+
+			"Failed Queries: \t\t%d\n"+
 			"Total Processing Time: \t\t%v\n"+
 			"Minimum Query Time: \t\t%v\n"+
 			"Maximum Query Time: \t\t%v\n"+
 			"Median Query Time: \t\t%v\n"+
 			"Avergae Query Time: \t\t%v",
-		r.NumQueries, r.TotalProcessingTime, r.MinQueryTime, r.MaxQueryTime, r.MedianQueryTime, r.AverageQueryTime,
+		r.NumQueries, r.SuccessfulQueries, r.FailedQueries,
+		r.TotalProcessingTime, r.MinQueryTime, r.MaxQueryTime, r.MedianQueryTime, r.AverageQueryTime,
 	)
 }
