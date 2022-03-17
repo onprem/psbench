@@ -22,7 +22,7 @@ func TestGenerateResult(t *testing.T) {
 			name:  "sample case",
 			input: []time.Duration{time.Second, 1 * time.Second, 2 * time.Second, 4 * time.Second, 9 * time.Second},
 			exp: Result{
-				NumQueries:          5,
+				SuccessfulQueries:   5,
 				TotalProcessingTime: 17 * time.Second,
 				MinQueryTime:        1 * time.Second,
 				MaxQueryTime:        9 * time.Second,
@@ -34,7 +34,7 @@ func TestGenerateResult(t *testing.T) {
 			name:  "even observations",
 			input: []time.Duration{time.Second, 1 * time.Second, 2 * time.Second, 3 * time.Second, 4 * time.Second, 9 * time.Second},
 			exp: Result{
-				NumQueries:          6,
+				SuccessfulQueries:   6,
 				TotalProcessingTime: 20 * time.Second,
 				MinQueryTime:        1 * time.Second,
 				MaxQueryTime:        9 * time.Second,
@@ -46,7 +46,7 @@ func TestGenerateResult(t *testing.T) {
 
 	for _, v := range cases {
 		t.Run(v.name, func(t *testing.T) {
-			got := generateResult(v.input)
+			got := generateResult(v.input, 0, 0)
 
 			testutil.Equals(t, v.exp, got)
 		})
